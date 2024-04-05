@@ -2,7 +2,7 @@
 using HarmonyLib;
 using UnityEngine;
 
-namespace OPJosMod_ContentWarning.ExampleMod.Patches
+namespace OPJosMod_ContentWarning.SelfRevive.Patches
 {
     [HarmonyPatch(typeof(Player))]
     public static class PlayerPatch

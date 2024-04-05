@@ -1,20 +1,15 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using OPJosMod_ContentWarning.ExampleMod.Patches;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using OPJosMod_ContentWarning.SelfRevive.Patches;
 
-namespace OPJosMod_ContentWarning
+namespace OPJosMod_ContentWarning.SelfRevive
 {
     [BepInPlugin(modGUID, modName, modVersion)]
     public class OpJosMod : BaseUnityPlugin
     {
-        private const string modGUID = "OpJosMod.ExampleMod";
-        private const string modName = "ExampleMod";
+        private const string modGUID = "OpJosMod.SelfRevive";
+        private const string modName = "SelfRevive";
         private const string modVersion = "1.0.0";
 
         private readonly Harmony harmony = new Harmony(modGUID);
