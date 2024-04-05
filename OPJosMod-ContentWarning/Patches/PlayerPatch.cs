@@ -1,10 +1,6 @@
 ﻿using BepInEx.Logging;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using UnityEngine;
 
 namespace OPJosMod_ContentWarning.ExampleMod.Patches
 {
@@ -17,12 +13,23 @@ namespace OPJosMod_ContentWarning.ExampleMod.Patches
             mls = logSource;
         }
 
-        [HarmonyPatch("TakeDamage")]
+        [HarmonyPatch("Update")]
         [HarmonyPostfix]
-        private static void patchTakeDamage(Player __instance, ref bool damage)
+        private static void patchUpdate(Player __instance)
         {
-            mls.LogMessage($"{__instance.name} was killed!");
-            __instance.Die();
+            if (__instance.IsLocal && Input.GetKeyDown(KeyCode.K))
+            {
+                if (__instance.data.dead)
+                {
+                    mls.LogMessage($"revived {__instance.name}");
+                    __instance.CallRevive();
+                }
+                else
+                {
+                    mls.LogMessage($"killed {__instance.name}");
+                    __instance.Die();
+                }
+            }
         }
     }
 }
