@@ -44,7 +44,7 @@ namespace OPJosMod_ContentWarning
                 textDisplayObject.gameObject.SetActive(true);
 
                 Vector3 newPosition = mainCamera.transform.position + mainCamera.transform.forward * 2f;
-                newPosition.y -= 0.5f; 
+                newPosition.y -= 0.5f;
                 textDisplayObject.transform.position = newPosition;
 
                 Quaternion targetRotation = Quaternion.LookRotation(textDisplayObject.transform.position - mainCamera.transform.position);
