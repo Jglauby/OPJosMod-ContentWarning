@@ -36,7 +36,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 if (AutoRevive)
                 {
                     mls.LogMessage($"auto revive off");
-                    
+                    customText.DisplayText("auto revive OFF", 3f);
                     AutoRevive = false;
 
                     if (isRagdoll)
@@ -45,13 +45,13 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 else
                 {
                     mls.LogMessage($"auto revive on");
+                    customText.DisplayText("auto revive ON", 3f);
                     AutoRevive = true;
                 }
             }
             
             if (isRagdoll && Time.time - timeDied > 3f)
-            {
-                customText.DisplayText("TESTING", 7f);
+            {              
                 isRagdoll = false;
             }
             else if (isRagdoll && Time.time - lastCalled > 0.25f)
