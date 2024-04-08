@@ -1,7 +1,9 @@
 ﻿using BepInEx.Logging;
 using HarmonyLib;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using UnityEngine;
+using static UnityEngine.Mesh;
 
 namespace OPJosMod_ContentWarning.SelfRevive.Patches
 {
@@ -14,12 +16,13 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             mls = logSource;
         }
 
-        public static bool AutoRevive = true;
-        public static PlayerRagdoll localPLayer;
-        public static MethodInfo ragdollMethod;
-        public static bool isRagdoll;
-        public static float lastCalled = Time.time;
-        public static float timeDied = Time.time;
+        private static bool AutoRevive = true;
+        private static PlayerRagdoll localPLayer;
+        private static MethodInfo ragdollMethod;
+        private static bool isRagdoll;
+        private static float lastCalled = Time.time;
+        private static float timeDied = Time.time;
+        private static CustomText customText = new CustomText();
 
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
@@ -33,6 +36,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 if (AutoRevive)
                 {
                     mls.LogMessage($"auto revive off");
+                    
                     AutoRevive = false;
 
                     if (isRagdoll)
@@ -44,16 +48,29 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                     AutoRevive = true;
                 }
             }
-
+            
             if (isRagdoll && Time.time - timeDied > 3f)
             {
+                customText.DisplayText("TESTING", 7f);
                 isRagdoll = false;
             }
             else if (isRagdoll && Time.time - lastCalled > 0.25f)
             {              
                 lastCalled = Time.time;
                 ragdollMethod.Invoke(localPLayer, new object[1] { 1f });
-            }         
+            }
+
+            customText.Update();
+        }
+
+        [HarmonyPatch("Start")]
+        [HarmonyPostfix]
+        private static void patchStart(Player __instance)
+        {
+            if (__instance.IsLocal)
+            {
+                customText.Start();
+            }
         }
 
         [HarmonyPatch("Awake")]
