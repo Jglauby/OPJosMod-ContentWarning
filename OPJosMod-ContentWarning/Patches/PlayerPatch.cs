@@ -77,6 +77,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 lastCalled = Time.time;
                 timeDied = Time.time;
                 __instance.data.health = 10;
+                __instance.data.remainingOxygen = __instance.data.maxOxygen / 2;
 
                 return false;
             }
