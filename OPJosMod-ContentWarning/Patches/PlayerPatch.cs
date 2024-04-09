@@ -1,5 +1,7 @@
 ﻿using BepInEx.Logging;
 using HarmonyLib;
+using System.Collections;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -30,10 +32,12 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         {
             if (__instance.IsLocal && Input.GetKeyDown(KeyCode.K))
             {
-                if (!__instance.data.dead)               
-                    __instance.Die();              
+                if (!__instance.data.dead)
+                    __instance.Die();
                 else
+                {
                     __instance.CallRevive();
+                }
             }
 
             if (__instance.IsLocal && Input.GetKeyDown(KeyCode.L))
@@ -98,7 +102,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 isRagdoll = true;
                 lastCalled = Time.time;
                 timeDied = Time.time;
-                __instance.data.health = 10;
+                __instance.data.health = 25;
                 __instance.data.remainingOxygen = __instance.data.maxOxygen / 2;
 
                 return false;
