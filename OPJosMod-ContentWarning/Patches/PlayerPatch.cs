@@ -29,7 +29,12 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         private static void patchUpdate(Player __instance)
         {
             if (__instance.IsLocal && Input.GetKeyDown(KeyCode.K))
-                __instance.Die();
+            {
+                if (!__instance.data.dead)               
+                    __instance.Die();              
+                else
+                    __instance.CallRevive();
+            }
 
             if (__instance.IsLocal && Input.GetKeyDown(KeyCode.L))
             {
