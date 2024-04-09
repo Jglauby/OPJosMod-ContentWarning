@@ -59,11 +59,11 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 }
             }
             
-            if (isRagdoll && Time.time - timeDied > 3f)
+            if (isRagdoll && Time.time - timeDied > 2.5f)
             {              
                 isRagdoll = false;
             }
-            else if (isRagdoll && Time.time - lastCalled > 0.25f)
+            else if (isRagdoll && Time.time - lastCalled > 0.1f)
             {              
                 lastCalled = Time.time;
                 ragdollMethod.Invoke(localPLayer, new object[1] { 1f });
@@ -103,7 +103,9 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 lastCalled = Time.time;
                 timeDied = Time.time;
                 __instance.data.health = 25;
-                __instance.data.remainingOxygen = __instance.data.maxOxygen / 2;
+
+                if (__instance.data.remainingOxygen < 1)
+                    __instance.data.remainingOxygen = __instance.data.maxOxygen / 4;
 
                 return false;
             }
