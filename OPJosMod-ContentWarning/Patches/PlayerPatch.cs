@@ -36,6 +36,9 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                     __instance.Die();
                 else
                 {
+                    if (__instance.data.remainingOxygen < 1)
+                        __instance.data.remainingOxygen = __instance.data.maxOxygen / 4;
+
                     __instance.CallRevive();
                 }
             }
