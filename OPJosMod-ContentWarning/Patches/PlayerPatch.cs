@@ -1,5 +1,8 @@
 ﻿using BepInEx.Logging;
+using DefaultNamespace;
 using HarmonyLib;
+using Photon.Pun;
+using System;
 using System.Collections;
 using System.Net.NetworkInformation;
 using System.Reflection;
@@ -7,6 +10,7 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 using static Bot;
 using static UnityEngine.Mesh;
+using Object = UnityEngine.Object;
 
 namespace OPJosMod_ContentWarning.SelfRevive.Patches
 {
@@ -19,8 +23,10 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             mls = logSource;
         }
 
-        private static bool AutoRevive = true;
-        private static PlayerRagdoll localPLayer;
+        public static Player LocalPlayer;
+        public static bool AutoRevive = true;
+
+        private static PlayerRagdoll localPLayerRagdoll;
         private static MethodInfo ragdollMethod;
         private static bool isRagdoll;
         private static float lastCalled = Time.time;
@@ -42,7 +48,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             else if (isRagdoll && Time.time - lastCalled > 0.1f)
             {              
                 lastCalled = Time.time;
-                ragdollMethod.Invoke(localPLayer, new object[1] { 1f });
+                ragdollMethod.Invoke(localPLayerRagdoll, new object[1] { 1f });
             }
 
             customText.Update();
@@ -54,6 +60,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         {
             if (__instance.IsLocal)
             {
+                LocalPlayer = __instance;
                 customText.Start();
             }
         }
@@ -64,8 +71,8 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         {
             if (__instance.IsLocal)
             {
-                localPLayer = ((Component)__instance).gameObject.GetComponent<PlayerRagdoll>();
-                ragdollMethod = ((object)localPLayer).GetType().GetMethod("CallFall", BindingFlags.Instance | BindingFlags.NonPublic);
+                localPLayerRagdoll = ((Component)__instance).gameObject.GetComponent<PlayerRagdoll>();
+                ragdollMethod = ((object)localPLayerRagdoll).GetType().GetMethod("CallFall", BindingFlags.Instance | BindingFlags.NonPublic);
             }
         }
 
@@ -96,16 +103,8 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 if (__instance.data.remainingOxygen < 1)
                     __instance.data.remainingOxygen = __instance.data.maxOxygen / 4;
 
-                //make all enemies untarget you for 6seconds, idk if this works
-                Bot[] enemies = Object.FindObjectsOfType<Bot>();
-                foreach (Bot enemy in enemies)
-                {
-                    if (enemy.aggro && enemy.targetPlayer.name == __instance.name)
-                    {
-                        enemy.IgnoreTargetFor(__instance, 6f);                      
-                    }
-                }
-
+                handleEnemies(__instance);
+                
                 return false;
             }
 
@@ -153,6 +152,34 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 }
             }
             catch { }
+        }
+
+        private static void handleEnemies(Player __instance)
+        {
+            Bot[] enemies = Object.FindObjectsOfType<Bot>();
+            foreach (Bot enemy in enemies)
+            {
+                //make enemy ignore
+                if (enemy.aggro && enemy.targetPlayer != null && enemy.targetPlayer.name == __instance.name)
+                {
+                    enemy.IgnoreTargetFor(__instance, 5f);
+                }
+
+                //hanlde any slurpers
+                Bot_Slurper slurperEnemy = enemy.GetComponent<Bot_Slurper>();
+                if (slurperEnemy != null)
+                {
+                    FieldInfo viewField = typeof(Bot_Slurper).GetField("view_g", BindingFlags.NonPublic | BindingFlags.Instance);
+                    PhotonView view_g = (PhotonView)viewField.GetValue(slurperEnemy);
+
+                    if (slurperEnemy.playerAttached != null && slurperEnemy.playerAttached.name == __instance.name)
+                    {
+                        mls.LogMessage("drop playe from sluper");
+                        view_g.RPC("RPCA_ReleasePlayer", RpcTarget.All, Array.Empty<object>());
+                    }
+                }
+            }
+
         }
     }
 }

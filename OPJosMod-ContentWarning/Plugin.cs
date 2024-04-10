@@ -11,7 +11,7 @@ namespace OPJosMod_ContentWarning.SelfRevive
     {
         private const string modGUID = "OpJosMod.SelfRevive";
         private const string modName = "SelfRevive";
-        private const string modVersion = "1.3.0";
+        private const string modVersion = "1.3.1";
 
         private readonly Harmony harmony = new Harmony(modGUID);
         private static OpJosMod Instance;
