@@ -5,6 +5,7 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using static Bot;
 using static UnityEngine.Mesh;
 
 namespace OPJosMod_ContentWarning.SelfRevive.Patches
@@ -65,6 +66,8 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             if (isRagdoll && Time.time - timeDied > 2.5f)
             {              
                 isRagdoll = false;
+
+                __instance.data.dead = false;
             }
             else if (isRagdoll && Time.time - lastCalled > 0.1f)
             {              
@@ -117,10 +120,21 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 isRagdoll = true;
                 lastCalled = Time.time;
                 timeDied = Time.time;
+                __instance.data.dead = true;
                 __instance.data.health = 25;
 
                 if (__instance.data.remainingOxygen < 1)
                     __instance.data.remainingOxygen = __instance.data.maxOxygen / 4;
+
+                //make all enemies untarget you for 6seconds, idk if this works
+                Bot[] enemies = Object.FindObjectsOfType<Bot>();
+                foreach (Bot enemy in enemies)
+                {
+                    if (enemy.aggro && enemy.targetPlayer.name == __instance.name)
+                    {
+                        enemy.IgnoreTargetFor(__instance, 6f);                      
+                    }
+                }
 
                 return false;
             }
