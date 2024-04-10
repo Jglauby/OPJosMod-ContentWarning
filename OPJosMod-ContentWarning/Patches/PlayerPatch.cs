@@ -31,37 +31,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         [HarmonyPostfix]
         private static void patchUpdate(Player __instance)
         {
-            if (__instance.IsLocal && Input.GetKeyDown(KeyCode.K))
-            {
-                if (!__instance.data.dead)
-                    __instance.Die();
-                else
-                {
-                    if (__instance.data.remainingOxygen < 1)
-                        __instance.data.remainingOxygen = __instance.data.maxOxygen / 4;
-
-                    __instance.CallRevive();
-                }
-            }
-
-            if (__instance.IsLocal && Input.GetKeyDown(KeyCode.L))
-            {
-                if (AutoRevive)
-                {
-                    mls.LogMessage($"auto revive off");
-                    customText.DisplayText("auto revive OFF", 3f);
-                    AutoRevive = false;
-
-                    if (isRagdoll)
-                        __instance.Die();
-                }
-                else
-                {
-                    mls.LogMessage($"auto revive on");
-                    customText.DisplayText("auto revive ON", 3f);
-                    AutoRevive = true;
-                }
-            }
+            handleInputs(__instance);
             
             if (isRagdoll && Time.time - timeDied > 2.5f)
             {              
@@ -140,6 +110,49 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             }
 
             return true;
+        }
+
+        private static void handleInputs(Player __instance)
+        {
+            try
+            {
+                if (__instance.IsLocal && Input.GetKeyDown(ConfigVariables.ReviveButton))
+                {
+                    if (!__instance.data.dead)
+                        __instance.Die();
+                    else
+                    {
+                        if (__instance.data.remainingOxygen < 1)
+                            __instance.data.remainingOxygen = __instance.data.maxOxygen / 4;
+
+                        __instance.CallRevive();
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (__instance.IsLocal && Input.GetKeyDown(ConfigVariables.AutoReviveButton))
+                {
+                    if (AutoRevive)
+                    {
+                        mls.LogMessage($"auto revive off");
+                        customText.DisplayText("auto revive OFF", 3f);
+                        AutoRevive = false;
+
+                        if (isRagdoll)
+                            __instance.Die();
+                    }
+                    else
+                    {
+                        mls.LogMessage($"auto revive on");
+                        customText.DisplayText("auto revive ON", 3f);
+                        AutoRevive = true;
+                    }
+                }
+            }
+            catch { }
         }
     }
 }
