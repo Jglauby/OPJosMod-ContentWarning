@@ -100,6 +100,18 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         [HarmonyPrefix]
         private static bool patchDie(Player __instance)
         {
+            return handleDeath(__instance);
+        }
+
+        [HarmonyPatch("CallDie")]
+        [HarmonyPrefix]
+        private static bool patchCallDie(Player __instance)
+        {
+            return handleDeath(__instance);
+        }
+
+        private static bool handleDeath(Player __instance)
+        {
             if (AutoRevive && __instance.IsLocal)
             {
                 isRagdoll = true;
