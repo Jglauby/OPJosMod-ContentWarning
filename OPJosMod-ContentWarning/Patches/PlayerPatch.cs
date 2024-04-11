@@ -24,15 +24,16 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         }
 
         private static bool AutoRevive = true;
-        private static PlayerRagdoll localPLayerRagdoll;
-        private static MethodInfo ragdollMethod;
-        private static bool isRagdoll;
-        private static float lastCalledDeath = Time.time;
         private static float timeDied = Time.time;
+        private static float lastPressedDieButton = Time.time;
         private static CustomText customText = new CustomText();
 
-        private static float callRagdollFrequency = 0.1f;
-        private static float stayRagdollTime = 1f;
+        private static MethodInfo ragdollMethod;
+        private static PlayerRagdoll localPLayerRagdoll;
+        private static float lastFloppedTime = Time.time;
+
+        private static float stayRagdollTime = 2.5f;
+        private static float timeRequiredNotPressingDeadButton = 3f;
 
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
@@ -40,30 +41,21 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         {
             handleInputs(__instance);
 
-            if (isRagdoll)
+            if (__instance.data.dead && AutoRevive)
             {
-                if (Time.time - timeDied > stayRagdollTime)
+                if (Time.time - timeDied > stayRagdollTime
+                    && Time.time - lastPressedDieButton > timeRequiredNotPressingDeadButton)
                 {
-                    isRagdoll = false;
+                    __instance.data.dead = false;
                 }
-                else if (Time.time - lastCalledDeath > callRagdollFrequency)
+                else if (Time.time - lastFloppedTime > 0.1f)
                 {
-                    lastCalledDeath = Time.time;
+                    lastFloppedTime = Time.time;
                     ragdollMethod.Invoke(localPLayerRagdoll, new object[1] { 1f });
                 }
             }
 
             customText.Update();
-        }
-
-        [HarmonyPatch("Start")]
-        [HarmonyPostfix]
-        private static void patchStart(Player __instance)
-        {
-            if (__instance.IsLocal)
-            {
-                customText.Start();
-            }
         }
 
         [HarmonyPatch("Awake")]
@@ -74,6 +66,16 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             {
                 localPLayerRagdoll = ((Component)__instance).gameObject.GetComponent<PlayerRagdoll>();
                 ragdollMethod = ((object)localPLayerRagdoll).GetType().GetMethod("CallFall", BindingFlags.Instance | BindingFlags.NonPublic);
+            }
+        }
+
+        [HarmonyPatch("Start")]
+        [HarmonyPostfix]
+        private static void patchStart(Player __instance)
+        {
+            if (__instance.IsLocal)
+            {
+                customText.Start();
             }
         }
 
@@ -95,11 +97,9 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         {
             if (AutoRevive && __instance.IsLocal)
             {
-                isRagdoll = true;
-                lastCalledDeath = Time.time;
                 timeDied = Time.time;
                 __instance.data.dead = true;
-                __instance.data.health = 25;
+                __instance.data.health = 30;
 
                 if (__instance.data.remainingOxygen < 1)
                     __instance.data.remainingOxygen = __instance.data.maxOxygen / 4;
@@ -118,9 +118,12 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             {
                 if (__instance.IsLocal && Input.GetKeyDown(ConfigVariables.ReviveButton))
                 {
+                    lastPressedDieButton = Time.time;
                     if (!__instance.data.dead)
-                        __instance.Die();
-                    else
+                    {
+                        __instance.Die();                      
+                    }
+                    else if (AutoRevive == false)
                     {
                         if (__instance.data.remainingOxygen < 1)
                             __instance.data.remainingOxygen = __instance.data.maxOxygen / 4;
@@ -141,7 +144,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                         customText.DisplayText("auto revive OFF", 3f);
                         AutoRevive = false;
 
-                        if (isRagdoll)
+                        if (__instance.data.dead)
                             __instance.Die();
                     }
                     else
@@ -179,15 +182,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                         view_g.RPC("RPCA_ReleasePlayer", RpcTarget.All, Array.Empty<object>());
                     }
                 }
-
-                //handle barnacle balls
-                Bot_BarnacleBall barnacleEnemy = enemy.GetComponent<Bot_BarnacleBall>();
-                if (barnacleEnemy != null)
-                {
-
-                }
             }
-
         }
     }
 }
