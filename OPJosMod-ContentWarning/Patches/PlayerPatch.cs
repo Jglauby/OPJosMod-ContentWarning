@@ -4,6 +4,7 @@ using HarmonyLib;
 using Photon.Pun;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -35,10 +36,17 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         private static float stayRagdollTime = 2.5f;
         private static float timeRequiredNotPressingDeadButton = 3f;
 
+        private static Bot[] allEnemies;
+        private static float lastTimeSavedLocation = Time.time;
+        private static List<Vector3> lastLocations = new List<Vector3>();
+
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
         private static void patchUpdate(Player __instance)
         {
+            if (!__instance.IsLocal)
+                return;
+
             handleInputs(__instance);
 
             if (__instance.data.dead && AutoRevive)
@@ -53,6 +61,16 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                     lastFloppedTime = Time.time;
                     ragdollMethod.Invoke(localPLayerRagdoll, new object[1] { 1f });
                 }
+            }
+
+            //save last existed locations
+            if (Time.time - lastTimeSavedLocation > 0.1f)
+            {
+                lastTimeSavedLocation = Time.time;
+                if (lastLocations.Count > 1000)
+                    lastLocations.RemoveAt(0);
+                
+                lastLocations.Add(__instance.transform.position);
             }
 
             customText.Update();
@@ -160,13 +178,20 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
 
         private static void handleEnemies(Player __instance)
         {
-            Bot[] enemies = Object.FindObjectsOfType<Bot>();
-            foreach (Bot enemy in enemies)
+            allEnemies = Object.FindObjectsOfType<Bot>();
+            foreach (Bot enemy in allEnemies)
             {
-                //make enemy ignore
-                if (enemy.aggro && enemy.targetPlayer != null && enemy.targetPlayer.name == __instance.name)
+                //enemy too close
+                if (Vector3.Distance(enemy.transform.position, __instance.transform.position) < 3)
                 {
-                    enemy.IgnoreTargetFor(__instance, 5f);
+                    foreach (var position in lastLocations)
+                    {
+                        if (Vector3.Distance(enemy.transform.position, position) >= 3)
+                        {
+                            __instance.transform.position = position;
+                            break;
+                        }
+                    }
                 }
 
                 //hanlde any slurpers
