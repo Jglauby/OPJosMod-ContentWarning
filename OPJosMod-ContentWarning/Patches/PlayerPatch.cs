@@ -23,32 +23,34 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             mls = logSource;
         }
 
-        public static Player LocalPlayer;
-        public static bool AutoRevive = true;
-
+        private static bool AutoRevive = true;
         private static PlayerRagdoll localPLayerRagdoll;
         private static MethodInfo ragdollMethod;
         private static bool isRagdoll;
-        private static float lastCalled = Time.time;
+        private static float lastCalledDeath = Time.time;
         private static float timeDied = Time.time;
         private static CustomText customText = new CustomText();
+
+        private static float callRagdollFrequency = 0.1f;
+        private static float stayRagdollTime = 1f;
 
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
         private static void patchUpdate(Player __instance)
         {
             handleInputs(__instance);
-            
-            if (isRagdoll && Time.time - timeDied > 2.5f)
-            {              
-                isRagdoll = false;
 
-                __instance.data.dead = false;
-            }
-            else if (isRagdoll && Time.time - lastCalled > 0.1f)
-            {              
-                lastCalled = Time.time;
-                ragdollMethod.Invoke(localPLayerRagdoll, new object[1] { 1f });
+            if (isRagdoll)
+            {
+                if (Time.time - timeDied > stayRagdollTime)
+                {
+                    isRagdoll = false;
+                }
+                else if (Time.time - lastCalledDeath > callRagdollFrequency)
+                {
+                    lastCalledDeath = Time.time;
+                    ragdollMethod.Invoke(localPLayerRagdoll, new object[1] { 1f });
+                }
             }
 
             customText.Update();
@@ -60,7 +62,6 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         {
             if (__instance.IsLocal)
             {
-                LocalPlayer = __instance;
                 customText.Start();
             }
         }
@@ -95,7 +96,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             if (AutoRevive && __instance.IsLocal)
             {
                 isRagdoll = true;
-                lastCalled = Time.time;
+                lastCalledDeath = Time.time;
                 timeDied = Time.time;
                 __instance.data.dead = true;
                 __instance.data.health = 25;
@@ -177,6 +178,13 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                         mls.LogMessage("drop playe from sluper");
                         view_g.RPC("RPCA_ReleasePlayer", RpcTarget.All, Array.Empty<object>());
                     }
+                }
+
+                //handle barnacle balls
+                Bot_BarnacleBall barnacleEnemy = enemy.GetComponent<Bot_BarnacleBall>();
+                if (barnacleEnemy != null)
+                {
+
                 }
             }
 
