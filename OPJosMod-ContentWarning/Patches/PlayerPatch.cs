@@ -30,7 +30,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         private static CustomText customText = new CustomText();
 
         private static MethodInfo ragdollMethod;
-        private static PlayerRagdoll localPLayerRagdoll;
+        private static PlayerRagdoll localPlayerRagdoll;
         private static float lastFloppedTime = Time.time;
 
         private static float stayRagdollTime = 2.5f;
@@ -59,7 +59,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 else if (Time.time - lastFloppedTime > 0.1f)
                 {
                     lastFloppedTime = Time.time;
-                    ragdollMethod.Invoke(localPLayerRagdoll, new object[1] { 1f });
+                    ragdollMethod.Invoke(localPlayerRagdoll, new object[1] { 1f });
                 }
             }
 
@@ -69,12 +69,14 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                 //mls.LogMessage($"saved location {__instance.HeadPosition()}");
                 lastTimeSavedLocation = Time.time;
 
-                if (((lastLocations.Count > 1 && Vector3.Distance(lastLocations[lastLocations.Count - 1], __instance.HeadPosition()) > 0.2) ||
-                        lastLocations.Count <= 1) && true)//ad check to being on ground instead of this "true" check
-                    lastLocations.Insert(0, __instance.HeadPosition());
+                if (((lastLocations.Count > 0 && Vector3.Distance(lastLocations[lastLocations.Count - 1], __instance.HeadPosition()) > 0.1f) ||
+                        lastLocations.Count <= 0) && true)//ad check to being on ground instead of this "true" check
+                    lastLocations.Add(__instance.HeadPosition());
 
                 if (lastLocations.Count > 1000)
-                    lastLocations.RemoveAt(lastLocations.Count - 1);
+                    lastLocations.RemoveAt(0);
+
+                //mls.LogMessage($"lastLocations count = {lastLocations.Count} saved:{__instance.HeadPosition()}");
             }
 
             customText.Update();
@@ -86,8 +88,8 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         {
             if (__instance.IsLocal)
             {
-                localPLayerRagdoll = ((Component)__instance).gameObject.GetComponent<PlayerRagdoll>();
-                ragdollMethod = ((object)localPLayerRagdoll).GetType().GetMethod("CallFall", BindingFlags.Instance | BindingFlags.NonPublic);
+                localPlayerRagdoll = ((Component)__instance).gameObject.GetComponent<PlayerRagdoll>();
+                ragdollMethod = ((object)localPlayerRagdoll).GetType().GetMethod("CallFall", BindingFlags.Instance | BindingFlags.NonPublic);
             }
         }
 
@@ -183,20 +185,29 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         private static void handleEnemies(Player __instance)
         {
             allEnemies = Object.FindObjectsOfType<Bot>();
+            bool hasTeleported = false;
             foreach (Bot enemy in allEnemies)
             {
                 //mls.LogMessage($"enemy at {enemy.transform.position}");
-                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < 5)
+                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < 3)
                 {
                     //mls.LogMessage("enemy too close");
+                    lastLocations.Sort((a, b) => Vector3.Distance(a, enemy.transform.position).CompareTo(Vector3.Distance(b, enemy.transform.position)));
                     foreach (var position in lastLocations)
                     {
                         //mls.LogMessage($"looping through positions {position}");
-                        if (Vector3.Distance(enemy.transform.position, position) >= 5)
+                        if (Vector3.Distance(enemy.transform.position, position) >= 3 && !hasTeleported)
                         {
                             mls.LogMessage($"setting positon to {position}");
-                            __instance.refs.rigRoot.transform.position = new Vector3(position.x, position.y + 0.1f, position.z);
+                            //__instance.refs.rigRoot.transform.position = new Vector3(position.x, position.y, position.z);                            
+                            //__instance.refs.headPos.transform.position = new Vector3(position.x, position.y + 100f, position.z);
+                            //__instance.refs.controller.gameObject.transform.position = new Vector3(position.x, position.y + 10000f, position.z);
+                            //__instance.gameObject.transform.position = new Vector3(position.x, position.y + 10000f, position.z);
 
+                            //localPlayerRagdoll.transform.position = new Vector3(position.x, position.y + 0.1f, position.z);
+                            __instance.refs.rigRoot.transform.position = new Vector3(position.x, position.y + 100f, position.z);
+
+                            hasTeleported = true;
                             break;
                         }
                     }
@@ -216,6 +227,8 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                     }
                 }
             }
+
+            hasTeleported = false;
         }
     }
 }
