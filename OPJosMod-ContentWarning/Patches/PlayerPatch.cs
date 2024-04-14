@@ -66,11 +66,15 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             //save last existed locations
             if (Time.time - lastTimeSavedLocation > 0.1f)
             {
+                //mls.LogMessage($"saved location {__instance.HeadPosition()}");
                 lastTimeSavedLocation = Time.time;
+
+                if (((lastLocations.Count > 1 && Vector3.Distance(lastLocations[lastLocations.Count - 1], __instance.HeadPosition()) > 0.2) ||
+                        lastLocations.Count <= 1) && true)//ad check to being on ground instead of this "true" check
+                    lastLocations.Insert(0, __instance.HeadPosition());
+
                 if (lastLocations.Count > 1000)
-                    lastLocations.RemoveAt(0);
-                
-                lastLocations.Add(__instance.transform.position);
+                    lastLocations.RemoveAt(lastLocations.Count - 1);
             }
 
             customText.Update();
@@ -181,14 +185,18 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             allEnemies = Object.FindObjectsOfType<Bot>();
             foreach (Bot enemy in allEnemies)
             {
-                //enemy too close
-                if (Vector3.Distance(enemy.transform.position, __instance.transform.position) < 3)
+                //mls.LogMessage($"enemy at {enemy.transform.position}");
+                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < 3)
                 {
+                    //mls.LogMessage("enemy too close");
                     foreach (var position in lastLocations)
                     {
-                        if (Vector3.Distance(enemy.transform.position, position) >= 3)
+                        //mls.LogMessage($"looping through positions {position}");
+                        if (Vector3.Distance(enemy.transform.position, position) >= 10)
                         {
-                            __instance.transform.position = position;
+                            mls.LogMessage($"setting positon to {position}");
+                            __instance.refs.rigRoot.transform.position = position;
+
                             break;
                         }
                     }
