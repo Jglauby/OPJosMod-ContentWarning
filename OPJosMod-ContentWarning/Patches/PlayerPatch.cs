@@ -186,16 +186,16 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             foreach (Bot enemy in allEnemies)
             {
                 //mls.LogMessage($"enemy at {enemy.transform.position}");
-                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < 3)
+                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < 5)
                 {
                     //mls.LogMessage("enemy too close");
                     foreach (var position in lastLocations)
                     {
                         //mls.LogMessage($"looping through positions {position}");
-                        if (Vector3.Distance(enemy.transform.position, position) >= 10)
+                        if (Vector3.Distance(enemy.transform.position, position) >= 5)
                         {
                             mls.LogMessage($"setting positon to {position}");
-                            __instance.refs.rigRoot.transform.position = position;
+                            __instance.refs.rigRoot.transform.position = new Vector3(position.x, position.y + 0.1f, position.z);
 
                             break;
                         }
