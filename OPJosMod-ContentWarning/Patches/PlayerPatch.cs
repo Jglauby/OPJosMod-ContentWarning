@@ -2,6 +2,7 @@
 using DefaultNamespace;
 using HarmonyLib;
 using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using static Bot;
+using static HelperFunctions;
 using static UnityEngine.Mesh;
 using Object = UnityEngine.Object;
 
@@ -55,6 +57,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                     && Time.time - lastPressedDieButton > timeRequiredNotPressingDeadButton)
                 {
                     __instance.data.dead = false;
+                    teleportToSaftey(__instance);
                 }
                 else if (Time.time - lastFloppedTime > 0.1f)
                 {
@@ -185,34 +188,8 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         private static void handleEnemies(Player __instance)
         {
             allEnemies = Object.FindObjectsOfType<Bot>();
-            bool hasTeleported = false;
             foreach (Bot enemy in allEnemies)
             {
-                //mls.LogMessage($"enemy at {enemy.transform.position}");
-                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < 3)
-                {
-                    //mls.LogMessage("enemy too close");
-                    lastLocations.Sort((a, b) => Vector3.Distance(a, enemy.transform.position).CompareTo(Vector3.Distance(b, enemy.transform.position)));
-                    foreach (var position in lastLocations)
-                    {
-                        //mls.LogMessage($"looping through positions {position}");
-                        if (Vector3.Distance(enemy.transform.position, position) >= 3 && !hasTeleported)
-                        {
-                            mls.LogMessage($"setting positon to {position}");
-                            //__instance.refs.rigRoot.transform.position = new Vector3(position.x, position.y, position.z);                            
-                            //__instance.refs.headPos.transform.position = new Vector3(position.x, position.y + 100f, position.z);
-                            //__instance.refs.controller.gameObject.transform.position = new Vector3(position.x, position.y + 10000f, position.z);
-                            //__instance.gameObject.transform.position = new Vector3(position.x, position.y + 10000f, position.z);
-
-                            //localPlayerRagdoll.transform.position = new Vector3(position.x, position.y + 0.1f, position.z);
-                            __instance.refs.rigRoot.transform.position = new Vector3(position.x, position.y + 100f, position.z);
-
-                            hasTeleported = true;
-                            break;
-                        }
-                    }
-                }
-
                 //hanlde any slurpers
                 Bot_Slurper slurperEnemy = enemy.GetComponent<Bot_Slurper>();
                 if (slurperEnemy != null)
@@ -224,6 +201,35 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                     {
                         mls.LogMessage("drop playe from sluper");
                         view_g.RPC("RPCA_ReleasePlayer", RpcTarget.All, Array.Empty<object>());
+                    }
+                }
+            }
+        }
+
+        private static void teleportToSaftey(Player __instance)
+        {
+            allEnemies = Object.FindObjectsOfType<Bot>();
+            bool hasTeleported = false;
+            foreach (Bot enemy in allEnemies)
+            {
+                //mls.LogMessage($"enemy at {enemy.transform.position}");
+                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < ConfigVariables.safteyRange)
+                {
+                    //mls.LogMessage("enemy too close");
+                    lastLocations.Sort((a, b) => Vector3.Distance(a, enemy.transform.position).CompareTo(Vector3.Distance(b, enemy.transform.position)));
+                    foreach (var position in lastLocations)
+                    {
+                        //mls.LogMessage($"looping through positions {position}");
+                        if (Vector3.Distance(enemy.transform.position, position) >= ConfigVariables.safteyRange && !hasTeleported)
+                        {
+                            mls.LogMessage($"setting positon to {position}");
+                            var updatedPosition = new Vector3(position.x, position.y + 0.1f, position.z);
+                            MethodInfo teleportMethod = typeof(Player).GetMethod("Teleport", BindingFlags.NonPublic | BindingFlags.Instance);
+                            teleportMethod.Invoke(__instance, new object[] { updatedPosition, __instance.refs.headPos.forward });
+
+                            hasTeleported = true;
+                            break;
+                        }
                     }
                 }
             }
