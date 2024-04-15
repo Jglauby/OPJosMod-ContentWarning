@@ -52,7 +52,7 @@ namespace OPJosMod_ContentWarning.SelfRevive
 
             var configSafteyRange = Config.Bind("Saftey Range",
                                         "SafteyRange",
-                                        5f,
+                                        3f,
                                         "When you have the teleport to safer location on, what is the distance that is deemed safe? How far away you will appear from an enemy.");
 
             ConfigVariables.ReviveButton = configReviveButton.Value;

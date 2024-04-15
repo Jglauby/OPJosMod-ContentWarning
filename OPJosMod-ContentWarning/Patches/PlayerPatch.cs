@@ -41,6 +41,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         private static Bot[] allEnemies;
         private static float lastTimeSavedLocation = Time.time;
         private static List<Vector3> lastLocations = new List<Vector3>();
+        private static float teleportDistanceMultiplier = 1f;
 
         [HarmonyPatch("Update")]
         [HarmonyPostfix]
@@ -81,6 +82,10 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
 
                 //mls.LogMessage($"lastLocations count = {lastLocations.Count} saved:{__instance.HeadPosition()}");
             }
+
+            //reset teleport distance after a while of not dying
+            if (Time.time - timeDied > 9f)
+                teleportDistanceMultiplier = 1f;
 
             customText.Update();
         }
@@ -124,6 +129,9 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
         {
             if (AutoRevive && __instance.IsLocal)
             {
+                if (Time.time - timeDied < 4)
+                    teleportDistanceMultiplier = teleportDistanceMultiplier * 2;
+
                 timeDied = Time.time;
                 __instance.data.dead = true;
                 __instance.data.health = 30;
@@ -216,14 +224,14 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
             foreach (Bot enemy in allEnemies)
             {
                 //mls.LogMessage($"enemy at {enemy.transform.position}");
-                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < ConfigVariables.SafteyRange)
+                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < (ConfigVariables.SafteyRange * teleportDistanceMultiplier))
                 {
                     //mls.LogMessage("enemy too close");
                     lastLocations.Sort((a, b) => Vector3.Distance(a, enemy.transform.position).CompareTo(Vector3.Distance(b, enemy.transform.position)));
                     foreach (var position in lastLocations)
                     {
                         //mls.LogMessage($"looping through positions {position}");
-                        if (Vector3.Distance(enemy.transform.position, position) >= ConfigVariables.SafteyRange && !hasTeleported)
+                        if (Vector3.Distance(enemy.transform.position, position) >= (ConfigVariables.SafteyRange * teleportDistanceMultiplier) && !hasTeleported)
                         {
                             mls.LogMessage($"setting positon to {position}");
                             var updatedPosition = new Vector3(position.x, position.y + 0.05f, position.z);
@@ -231,6 +239,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                             teleportMethod.Invoke(__instance, new object[] { updatedPosition, __instance.refs.headPos.forward });
 
                             hasTeleported = true;
+                            lastLocations.Remove(position);
                             break;
                         }
                     }
