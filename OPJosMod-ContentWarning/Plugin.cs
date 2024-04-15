@@ -45,9 +45,20 @@ namespace OPJosMod_ContentWarning.SelfRevive
                                         KeyCode.L,
                                         "Toggles on and off auto revive");
 
+            var configTeleportToSaferLocation = Config.Bind("Teleport to Safer Location",
+                                        "TeleportToSaferLocation",
+                                        true,
+                                        "When this is on, and you have autorevive on, then when you are standign back up as you are reviving it will teleport you to a safer location from eneimes. The goal is to help prevent you from getting stuck.");
+
+            var configSafteyRange = Config.Bind("Saftey Range",
+                                        "SafteyRange",
+                                        5f,
+                                        "When you have the teleport to safer location on, what is the distance that is deemed safe? How far away you will appear from an enemy.");
 
             ConfigVariables.ReviveButton = configReviveButton.Value;
             ConfigVariables.AutoReviveButton = configAutoReviveButton.Value;
+            ConfigVariables.TeleportToSaferLocation = configTeleportToSaferLocation.Value;
+            ConfigVariables.SafteyRange = configSafteyRange.Value;
 
             Config.Save();
         }

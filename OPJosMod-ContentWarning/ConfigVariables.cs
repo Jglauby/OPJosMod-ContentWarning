@@ -11,6 +11,7 @@ namespace OPJosMod_ContentWarning
     {
         public static KeyCode ReviveButton;
         public static KeyCode AutoReviveButton;
-        public static float safteyRange = 3f;
+        public static bool TeleportToSaferLocation;
+        public static float SafteyRange;
     }
 }

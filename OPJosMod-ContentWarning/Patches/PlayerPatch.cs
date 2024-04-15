@@ -208,19 +208,22 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
 
         private static void teleportToSaftey(Player __instance)
         {
+            if (!ConfigVariables.TeleportToSaferLocation)
+                return;
+
             allEnemies = Object.FindObjectsOfType<Bot>();
             bool hasTeleported = false;
             foreach (Bot enemy in allEnemies)
             {
                 //mls.LogMessage($"enemy at {enemy.transform.position}");
-                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < ConfigVariables.safteyRange)
+                if (Vector3.Distance(enemy.transform.position, __instance.HeadPosition()) < ConfigVariables.SafteyRange)
                 {
                     //mls.LogMessage("enemy too close");
                     lastLocations.Sort((a, b) => Vector3.Distance(a, enemy.transform.position).CompareTo(Vector3.Distance(b, enemy.transform.position)));
                     foreach (var position in lastLocations)
                     {
                         //mls.LogMessage($"looping through positions {position}");
-                        if (Vector3.Distance(enemy.transform.position, position) >= ConfigVariables.safteyRange && !hasTeleported)
+                        if (Vector3.Distance(enemy.transform.position, position) >= ConfigVariables.SafteyRange && !hasTeleported)
                         {
                             mls.LogMessage($"setting positon to {position}");
                             var updatedPosition = new Vector3(position.x, position.y + 0.05f, position.z);
