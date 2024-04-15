@@ -223,7 +223,7 @@ namespace OPJosMod_ContentWarning.SelfRevive.Patches
                         if (Vector3.Distance(enemy.transform.position, position) >= ConfigVariables.safteyRange && !hasTeleported)
                         {
                             mls.LogMessage($"setting positon to {position}");
-                            var updatedPosition = new Vector3(position.x, position.y + 0.1f, position.z);
+                            var updatedPosition = new Vector3(position.x, position.y + 0.05f, position.z);
                             MethodInfo teleportMethod = typeof(Player).GetMethod("Teleport", BindingFlags.NonPublic | BindingFlags.Instance);
                             teleportMethod.Invoke(__instance, new object[] { updatedPosition, __instance.refs.headPos.forward });
 
